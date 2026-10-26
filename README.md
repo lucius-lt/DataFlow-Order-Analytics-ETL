@@ -157,8 +157,3 @@ node test-e2e.js
 
 ---
 
-## Author
-
-- **Kushagra Dwivedi**
-- GitHub: [@KushagraDwivedics](https://github.com/KushagraDwivedics)
-- Repository: [Analytic-dashboard](https://github.com/KushagraDwivedics/Analytic-dashboard)
