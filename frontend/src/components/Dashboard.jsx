@@ -5,7 +5,7 @@ import { RevenueChart, CategoryChart, DeliveryChart } from './Charts';
 import OrdersTable from './OrdersTable';
 import { CategoryDrawer, OrderDrawer } from './Drawers';
 import { getSummary, getRevenue, getCategories, getDelivery, getOrders } from '../services/api';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 const Dashboard = () => {
   const [filters, setFilters] = useState({
@@ -65,8 +65,8 @@ const Dashboard = () => {
         orders
       });
     } catch (err) {
-      console.error(err);
-      setError('Unable to load analytics. Please try again.');
+      console.error('Dashboard load error:', err);
+      setError('Unable to load analytics data. Please check your backend connection or reload.');
     } finally {
       setLoading({
         summary: false,
@@ -98,24 +98,26 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center">
-        <div className="bg-red-50 text-red-600 p-4 rounded-full mb-4">
-          <AlertCircle size={32} />
+      <div className="max-w-7xl mx-auto py-12 flex flex-col items-center justify-center text-center">
+        <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 flex items-center justify-center mb-4">
+          <AlertCircle size={24} />
         </div>
-        <h3 className="text-lg font-semibold text-primary mb-2">Unable to load analytics</h3>
-        <p className="text-secondary mb-6">{error}</p>
+        <h3 className="text-base font-bold text-slate-900 mb-1">Unable to Load Analytics</h3>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-md mb-6">{error}</p>
         <button
           onClick={() => fetchData(appliedFilters)}
-          className="px-6 py-2 bg-primary text-white rounded-md hover:bg-slate-800 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-xs"
         >
-          Retry
+          <RefreshCw size={14} />
+          <span>Retry Loading</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto pb-10">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12">
+      {/* Interactive Filters Bar */}
       <FilterBar
         filters={filters}
         setFilters={setFilters}
@@ -123,26 +125,29 @@ const Dashboard = () => {
         onReset={handleResetFilters}
       />
       
+      {/* Top 4 KPI Metric Cards */}
       <KpiCards summary={data.summary} loading={loading.summary} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2">
+      {/* Middle Grid: Revenue Trend (2/3) + Delivery Split (1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-2 min-h-[360px]">
           <RevenueChart data={data.revenue} loading={loading.revenue} />
         </div>
-        <div>
+        <div className="min-h-[360px]">
           <DeliveryChart data={data.delivery} loading={loading.delivery} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-1">
+      {/* Bottom Grid: Category Breakdown (1/3) + Recent Orders Table (2/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-1 min-h-[380px]">
           <CategoryChart 
             data={data.categories} 
             loading={loading.categories} 
-            onCategoryClick={(data) => setSelectedCategory(data)} 
+            onCategoryClick={(entry) => setSelectedCategory(entry)} 
           />
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 min-h-[380px]">
           <OrdersTable 
             data={data.orders} 
             loading={loading.orders}
@@ -151,6 +156,7 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Slide-over Drawers */}
       <CategoryDrawer categoryData={selectedCategory} onClose={() => setSelectedCategory(null)} />
       <OrderDrawer orderData={selectedOrder} onClose={() => setSelectedOrder(null)} />
     </div>

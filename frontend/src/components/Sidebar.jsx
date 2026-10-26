@@ -1,16 +1,66 @@
-import React from 'react';
-import { LayoutDashboard, ShoppingCart, Package, BarChart2, Truck, Layers, Settings, X, Activity } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { 
+  LayoutDashboard, 
+  ShoppingCart, 
+  Package, 
+  BarChart2, 
+  Truck, 
+  Layers, 
+  Settings, 
+  X, 
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
+import DataFlowLogo from './ui/DataFlowLogo';
 
-const Sidebar = ({ currentRoute, setCurrentRoute, mobileMenuOpen, setMobileMenuOpen }) => {
-  const navItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Orders', icon: <ShoppingCart size={20} /> },
-    { name: 'Products', icon: <Package size={20} /> },
-    { name: 'Analytics', icon: <BarChart2 size={20} /> },
-    { name: 'Delivery', icon: <Truck size={20} /> },
-    { name: 'Pipeline', icon: <Layers size={20} /> },
-    { name: 'Settings', icon: <Settings size={20} /> },
-  ];
+const navSections = [
+  {
+    title: 'Overview',
+    items: [
+      { name: 'Dashboard', icon: LayoutDashboard, badge: null },
+      { name: 'Analytics', icon: BarChart2, badge: null },
+      { name: 'Delivery', icon: Truck, badge: null }
+    ]
+  },
+  {
+    title: 'Operations',
+    items: [
+      { name: 'Orders', icon: ShoppingCart, badge: null },
+      { name: 'Products', icon: Package, badge: null }
+    ]
+  },
+  {
+    title: 'ETL Engine',
+    items: [
+      { name: 'Pipeline', icon: Layers, badge: 'ETL' }
+    ]
+  },
+  {
+    title: 'Preferences',
+    items: [
+      { name: 'Settings', icon: Settings, badge: null }
+    ]
+  }
+];
+
+const Sidebar = ({ 
+  currentRoute, 
+  setCurrentRoute, 
+  mobileMenuOpen, 
+  setMobileMenuOpen,
+  isCollapsed = false,
+  setIsCollapsed
+}) => {
+  // Close drawer on Esc key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && mobileMenuOpen && setMobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen, setMobileMenuOpen]);
 
   const handleSelectRoute = (name) => {
     setCurrentRoute(name);
@@ -19,74 +69,149 @@ const Sidebar = ({ currentRoute, setCurrentRoute, mobileMenuOpen, setMobileMenuO
     }
   };
 
-  const navContent = (
-    <>
-      <div className="h-16 flex items-center justify-between px-6 border-b border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center font-bold">
-            <Activity size={18} />
+  const renderNavContent = (isMobileDrawer = false) => {
+    const showCompact = !isMobileDrawer && isCollapsed;
+
+    return (
+      <div className="flex flex-col h-full bg-white text-slate-800">
+        {/* Brand Header */}
+        <div className={`h-16 flex items-center justify-between border-b border-border px-4 ${showCompact ? 'justify-center px-2' : ''}`}>
+          <div className="flex items-center min-w-0">
+            <DataFlowLogo size={30} showText={!showCompact} />
           </div>
-          <h1 className="text-xl font-bold text-primary tracking-tight">Analytics Pro</h1>
-        </div>
-        {/* Mobile/Tablet close button */}
-        {setMobileMenuOpen && (
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="lg:hidden p-1.5 text-secondary hover:text-primary rounded-lg hover:bg-slate-100 transition-colors"
-            aria-label="Close navigation menu"
-          >
-            <X size={20} />
-          </button>
-        )}
-      </div>
 
-      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = currentRoute === item.name;
-          return (
+          {/* Mobile close button */}
+          {isMobileDrawer && setMobileMenuOpen && (
             <button
-              key={item.name}
-              onClick={() => handleSelectRoute(item.name)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-accent/10 text-accent font-semibold'
-                  : 'text-secondary hover:bg-slate-50 hover:text-primary'
-              }`}
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500"
+              aria-label="Close navigation"
             >
-              <span className={isActive ? 'text-accent' : 'text-secondary'}>{item.icon}</span>
-              <span>{item.name}</span>
+              <X size={18} />
             </button>
-          );
-        })}
-      </nav>
+          )}
 
-      <div className="p-4 border-t border-border">
-        <div className="text-[11px] text-secondary text-center">
-          Order Pipeline & Analytics v1.0
+          {/* Desktop collapse toggle */}
+          {!isMobileDrawer && setIsCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden lg:flex p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+          )}
+        </div>
+
+        {/* Navigation Sections */}
+        <nav className="flex-1 py-4 px-3 space-y-6 overflow-y-auto">
+          {navSections.map((section) => (
+            <div key={section.title} className="space-y-1">
+              {!showCompact && (
+                <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 select-none">
+                  {section.title}
+                </div>
+              )}
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentRoute === item.name;
+
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => handleSelectRoute(item.name)}
+                    title={showCompact ? item.name : undefined}
+                    className={`group w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all relative ${
+                      showCompact ? 'justify-center px-2' : ''
+                    } ${
+                      isActive
+                        ? 'bg-indigo-50/80 text-indigo-700 font-semibold shadow-xs'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    {/* Active vertical accent pill on the left */}
+                    {isActive && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-indigo-600 rounded-r-full" />
+                    )}
+
+                    <Icon
+                      size={18}
+                      className={`shrink-0 transition-colors ${
+                        isActive
+                          ? 'text-indigo-600'
+                          : 'text-slate-400 group-hover:text-slate-700'
+                      }`}
+                    />
+
+                    {!showCompact && (
+                      <>
+                        <span className="truncate text-left flex-1">{item.name}</span>
+                        {item.badge && (
+                          <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                            {item.badge}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Sidebar Footer */}
+        <div className="p-3 border-t border-border bg-slate-50/50">
+          {!showCompact ? (
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[11px] font-medium text-slate-600">SQLite Engine Active</span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-400">v1.2.0</span>
+            </div>
+          ) : (
+            <div className="flex justify-center" title="SQLite Engine Active">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            </div>
+          )}
         </div>
       </div>
-    </>
-  );
+    );
+  };
 
   return (
     <>
-      {/* Desktop Persistent Sidebar (Only on screens >= 1024px) */}
-      <aside className="hidden lg:flex flex-col w-64 bg-surface border-r border-border h-full shrink-0">
-        {navContent}
+      {/* Desktop Persistent Sidebar */}
+      <aside 
+        className={`hidden lg:flex flex-col bg-white border-r border-border h-full shrink-0 transition-all duration-200 ${
+          isCollapsed ? 'w-18' : 'w-64'
+        }`}
+      >
+        {renderNavContent(false)}
       </aside>
 
-      {/* Mobile & Tablet Slide-Over Drawer with Backdrop (< 1024px) */}
+      {/* Mobile / Tablet Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
-          {/* Backdrop */}
+        <div 
+          className="fixed inset-0 z-50 lg:hidden flex"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation Menu"
+        >
+          {/* Backdrop with subtle blur */}
           <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity animate-in fade-in"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          {/* Drawer Content */}
-          <div className="relative flex flex-col w-72 max-w-[85vw] bg-surface h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
-            {navContent}
+          {/* Drawer Panel */}
+          <div className="relative flex flex-col w-72 max-w-[85vw] bg-white h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+            {renderNavContent(true)}
           </div>
         </div>
       )}
@@ -95,4 +220,3 @@ const Sidebar = ({ currentRoute, setCurrentRoute, mobileMenuOpen, setMobileMenuO
 };
 
 export default Sidebar;
-
